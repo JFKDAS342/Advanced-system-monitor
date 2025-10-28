@@ -1,0 +1,66 @@
+========================
+
+# Исполняемые файлы
+system_monitor
+*.exe
+*.out
+*.bin
+
+# Объектные файлы
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dll
+
+# Папка с объектными файлами
+obj/
+build/
+dist/
+
+
+# Резервные копии
+*~
+*.bak
+*.swp
+*.swo
+
+# Скрытые файлы систем
+.DS_Store
+Thumbs.db
+.desktop
+
+
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Eclipse
+.settings/
+.metadata/
+
+
+# Логи приложения
+*.log
+logs/
+
+# Временные файлы
+*.tmp
+*.temp
+
+
+# Скомпилированная документация
+docs/_build/
+*.pdf
+
+# Пользовательские настройки
+config.local.*
+*.local
