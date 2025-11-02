@@ -53,7 +53,6 @@ void WebServer::handleClient(int client_socket)
     }
     else if (request.find("GET /api/metrics") != string::npos)
     {
-        MetricsCollector collector;
         response = collector.serializeToJSON();
         content_type = "application/json";
     }

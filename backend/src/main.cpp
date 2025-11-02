@@ -15,6 +15,7 @@ void signalHandler(int signal)
 
 int main()
 {
+    cout << unitbuf;
     cout << "Запуск веб хуеты" << endl;
 
     WebServer server;

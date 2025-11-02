@@ -15,7 +15,7 @@ struct SystemMetrics
 class MetricsCollector
 {
 private:
-    double getCPUsage();
+    double getCPUUsage();
     double getMemoryUsage();
     double getDiskUsage();
 
