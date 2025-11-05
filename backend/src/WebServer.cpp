@@ -5,6 +5,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <cstring>
+#include <fstream>
+#include <thread>
+#include <vector>
+#include <mutex>
 
 using namespace std;
 
@@ -17,6 +21,68 @@ WebServer::~WebServer()
     stop();
 }
 
+bool WebServer::serveStaticFile(int client_socket, const string &filepath)
+{
+    ifstream file(filepath, ios::binary);
+    string content_type;
+
+    if (!file.is_open())
+    {
+        cout << "Файл не найден: " << filepath << endl;
+        return false;
+    }
+    string content;
+    // перемещаем указатель в конец файла чтобы узнать размер файла
+    file.seekg(0, ios::end);
+    // seekg = seek get pointer (переместить указатель получения)
+    // 0 - смещение от позиции
+    // ios::end - от конца файла
+    size_t file_size(file.tellg()); // устанавливаем размер равный размеру файла
+    file.seekg(0, ios::beg);   // возращаем указатель в начало. ios::beg - от начала файла
+
+    content.resize(file_size);
+    // читаем содержимое файлф в строку
+    file.read(&content[0], file_size);
+    //&content[0] - получаем указатель на начало строки (C-строка)
+    // content.size() - сколько байт прочитать
+
+    file.close();
+    // определение content-type
+    if (filepath.find(".html") != string::npos)
+    {
+        content_type = "text/html; charset=utf-8";
+    }
+    else if (filepath.find(".css") != string::npos)
+    {
+        content_type = "text/css; charset=utf-8";
+    }
+    else if (filepath.find(".js") != string::npos)
+    {
+        content_type = "application/javascript; charset=utf-8";
+    }
+    else
+    {
+        content_type = "text/plain; charset=utf-8";
+    }
+    // отправление http запроса
+    string http_response =
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: " +
+        content_type + "\r\n"
+                       "Content-Length: " +
+        to_string(content.length()) + "\r\n"
+                                      "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                                      "Pragma: no-cache\r\n"
+                                      "Expires: 0\r\n"
+                                      "Connection: close\r\n"
+                                      "\r\n" +
+        content;
+
+    send(client_socket, http_response.c_str(), http_response.length(), 0);
+    cout << "Файл отправлен: " << filepath << endl;
+    return true;
+}
+
 // ЧТЕНИЕ HTTP ЗАПРОСА ОТ КЛИЕНТА
 string WebServer::readHTTPRequest(int client_socket)
 {
@@ -26,7 +92,6 @@ string WebServer::readHTTPRequest(int client_socket)
 
     if (bytes_read > 0)
     {
-        cout << "Получен запрос: " << buffer << endl;
         return string(buffer, bytes_read); // Преобразуем char[] в string
     }
     return ""; // Возвращаем пустую строку при ошибке
@@ -46,27 +111,41 @@ void WebServer::handleClient(int client_socket)
     string content_type;
     string status_line = "HTTP/1.1 200 OK\r\n";
 
-    if (request.find("GET /api/hello") != string::npos)
+    if (request.find("GET /") != string::npos ||
+        request.find("GET /index.html") != string::npos ||
+        request.find("GET /HTTP") != string::npos)
     {
-        response = "{\"message\": \"Hello API\", \"status\": \"success\"}";
-        content_type = "application/json";
+        if (serveStaticFile(client_socket, "../frontend/index.html"))
+        {
+            close(client_socket);
+            return;
+        }
+    }
+    else if (request.find("GET /static") != string::npos)
+    {
+        // извлекаем путь к файлу
+        size_t start = request.find("GET /static/") + 12;
+        size_t end = request.find(" HTTP/");
+        if (end != string::npos)
+        {
+            string filename = request.substr(start, end - start);
+            string filepath = "../frontend/" + filename;
+
+            if (serveStaticFile(client_socket, filepath))
+            {
+                close(client_socket);
+                return;
+            }
+        }
     }
     else if (request.find("GET /api/metrics") != string::npos)
     {
         response = collector.serializeToJSON();
         content_type = "application/json";
     }
-    else if (request.find("GET / ") != string::npos ||
-             request.find("GET / HTTP") != string::npos ||
-             request.find("GET /") == 0)
-    {
-        response = "<!DOCTYPE html><html><head><title>System Monitor</title></head>"
-                   "<body><h1>System Monitor</h1><p>Server is running!</p></body></html>";
-        content_type = "text/html; charset=utf-8";
-    }
     else
     {
-        response = "404 - Page Not Found";
+        response = "404 - Page not found";
         content_type = "text/plain; charset=utf-8";
         status_line = "HTTP/1.1 404 Not Found\r\n";
     }

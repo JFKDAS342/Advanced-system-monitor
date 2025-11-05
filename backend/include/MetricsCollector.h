@@ -2,15 +2,8 @@
 #define METRICSCOLLECTOR_H
 
 #include <string>
-
+#include "SystemMetrics.h"
 using namespace std;
-
-struct SystemMetrics
-{
-    double cpu_usage;
-    double memory_usage;
-    double disk_usage;
-};
 
 class MetricsCollector
 {

@@ -19,6 +19,8 @@ private:
     MetricsCollector collector;
     string readHTTPRequest(int client_socket);
     void handleClient(int client_socket);
+    bool serveStaticFile(int client_socket, const string &filepath);
+    bool isSaveFile(const string& filepath);
 
     vector<thread> worker_threads; // вектор рабочих потоков
     mutex log_mutex;               // мьютекс для безопасного вывода в консоль
