@@ -1,3 +1,7 @@
+#include "MetricsCollector.h"
+#include "JSONSerializer.h"
+#include "SystemMetrics.h"
+
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -5,12 +9,17 @@
 #include <sstream>
 #include <string>
 #include <sys/statvfs.h>
-#include "MetricsCollector.h"
-#include "JSONSerializer.h"
-#include "SystemMetrics.h"
+#include <chrono>   
+#include <mutex>     
+#include <string>
+
 using namespace std;
 
-MetricsCollector::MetricsCollector() : prev_total(0), prev_idle(0) {}
+MetricsCollector::MetricsCollector() : 
+prev_total(0), 
+prev_idle(0),
+last_cache_time(chrono::steady_clock::now())
+{}
 
 double MetricsCollector::getCPUUsage()
 {
@@ -140,13 +149,20 @@ double MetricsCollector::getDiskUsage()
 
 SystemMetrics MetricsCollector::collectMetrics()
 {
-    SystemMetrics metrics;
+    lock_guard<mutex> lock(cache_mutex);
+    //если кэш еще актуален возращем его
+    auto now = chrono::steady_clock::now();
+    if (now - last_cache_time < CACHE_DURATION){
+        return cached_metrics;
+    }
 
-    metrics.cpu_usage = getCPUUsage();
-    metrics.disk_usage = getDiskUsage();
-    metrics.memory_usage = getMemoryUsage();
+    cached_metrics.cpu_usage = getCPUUsage();
+    cached_metrics.memory_usage = getMemoryUsage();
+    cached_metrics.disk_usage = getDiskUsage();
 
-    return metrics;
+    last_cache_time = now;
+
+    return cached_metrics;
 }
 
 string MetricsCollector::serializeToJSON()

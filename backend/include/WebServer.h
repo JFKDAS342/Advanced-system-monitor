@@ -15,14 +15,17 @@ private:
     int server_port;
     int server_fd;           // это Файловый дескриптор "— это
                              // уникальный числовой идентификатор, который операционная система назначает каждому открытому файлу, каталогу, сокету или другому потоку ввода-вывода"
+    static constexpr const char* FRONTEND_PATH = "../frontend/";
+    
     atomic<bool> is_running; // атомарный флаг работы сервера
     MetricsCollector collector;
     string readHTTPRequest(int client_socket);
-    void handleClient(int client_socket);
-    bool serveStaticFile(int client_socket, const string &filepath);
-    bool isSaveFile(const string& filepath);
 
-    vector<thread> worker_threads; // вектор рабочих потоков
+    void handleClient(int client_socket);
+    bool serveStaticFile(int client_socket, const string& filepath);
+    bool isSafePath(const string& filepath);
+
+    vector<thread> client_threads; // вектор рабочих потоков
     mutex log_mutex;               // мьютекс для безопасного вывода в консоль
 
 public:

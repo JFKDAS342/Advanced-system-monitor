@@ -1,5 +1,6 @@
 #include "WebServer.h"
 #include "MetricsCollector.h"
+
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,6 +10,8 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include <sys/stat.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -19,10 +22,76 @@ WebServer::WebServer() : server_port(0), server_fd(-1), is_running(false) {}
 WebServer::~WebServer()
 {
     stop();
+    //цикл для проверки завершения всех потоков
+    for (auto& thread : client_threads){
+        if (thread.joinable()){
+            thread.join();
+        }
+    }
+
+    cout << "Все потоки завершины!" << endl;
+    
+}
+
+bool WebServer::isSafePath(const string& filepath) {
+    // Проверяем, что путь не пустой
+    
+    if (filepath.empty()) {
+        return false;
+    }
+
+    // Нормализуем путь, заменяем обратные слеши на прямые
+    string normalized_path = filepath;
+    replace(normalized_path.begin(), normalized_path.end(), '\\', '/');
+
+    // Базовый путь к фронтенду
+    string base_path = FRONTEND_PATH;
+    string clean_path;
+    for (size_t i = 0;i < normalized_path.length();i++){
+        if (i == 0 || normalized_path[i] != '/' || normalized_path[i-1] != '/'){
+            clean_path += normalized_path[i];
+        }
+    }
+    normalized_path = clean_path;
+
+    // Проверяем, что нормализованный путь начинается с базового пути
+    if (normalized_path.find(base_path) != 0) {
+        return false;
+    }
+
+    // Проверяем, что в пути нет опасных последовательностей (например ../)
+    // После базового пути не должно быть ".."
+    string relative_path = normalized_path.substr(base_path.length());
+    if (relative_path.find("../") != string::npos || 
+        relative_path.find("..\\") != string::npos ||
+        relative_path.find("..//") != string::npos){
+        return false;
+    }
+
+    //проверяем, что файл существует и это обычный файл
+    struct stat file_stat;
+    if (stat(filepath.c_str(), &file_stat) != 0) {
+        return false; 
+    }
+    //разрешаем только обычные файлы и дериктории ,а то дай им волю далбоебам
+    if (!S_ISREG(file_stat.st_mode) && !S_ISDIR(file_stat.st_mode)) {
+        return false; // Это не обычный файл (например, директория)
+    }
+
+    return true;
 }
 
 bool WebServer::serveStaticFile(int client_socket, const string &filepath)
 {
+    if (!isSafePath(filepath)){
+        string response = "HTTP/1.1 403 Forbidden\r\n"
+                         "Content-Length: 0\r\n"
+                         "\r\n";
+        send(client_socket,response.c_str(),response.length(), 0);
+        cout << "кто то хочет выебать наш засекреченный путь!" << filepath << endl;
+        return false;
+    }
+
     ifstream file(filepath, ios::binary);
     string content_type;
 
@@ -111,32 +180,34 @@ void WebServer::handleClient(int client_socket)
     string content_type;
     string status_line = "HTTP/1.1 200 OK\r\n";
 
-    if (request.find("GET /") != string::npos ||
-        request.find("GET /index.html") != string::npos ||
-        request.find("GET /HTTP") != string::npos)
-    {
-        if (serveStaticFile(client_socket, "../frontend/index.html"))
-        {
-            close(client_socket);
-            return;
-        }
-    }
-    else if (request.find("GET /static") != string::npos)
-    {
+    if (request.find("GET /static/") != string::npos) {
         // извлекаем путь к файлу
         size_t start = request.find("GET /static/") + 12;
         size_t end = request.find(" HTTP/");
-        if (end != string::npos)
-        {
+        if (end != string::npos) {
             string filename = request.substr(start, end - start);
             string filepath = "../frontend/" + filename;
-
-            if (serveStaticFile(client_socket, filepath))
-            {
+            
+            if (serveStaticFile(client_socket, filepath)) {
                 close(client_socket);
                 return;
             }
         }
+        
+        // Если не удалось обработать статический файл - отдаем 404
+        string not_found = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
+        send(client_socket, not_found.c_str(), not_found.length(), 0);
+        close(client_socket);
+        return;
+    }
+    else if (request.find("GET /") != string::npos ||
+        request.find("GET /index.html") != string::npos ||
+        request.find("GET /") != string::npos) {
+                    if (serveStaticFile(client_socket, "../frontend/index.html")) {
+            close(client_socket);
+            return;
+        }
+
     }
     else if (request.find("GET /api/metrics") != string::npos)
     {
@@ -191,8 +262,6 @@ bool WebServer::start(int port)
         return false;
     }
 
-    cout << "Сокет успешно настроен" << endl;
-
     // ПРОСЛУШИВАНИЕ ПОРТА
     if (listen(server_fd, 10) < 0)
     {
@@ -201,7 +270,7 @@ bool WebServer::start(int port)
         return false;
     }
 
-    cout << "Сервер слушает на порту " << port << endl;
+    
     is_running = true;
 
     while (is_running)
@@ -220,8 +289,13 @@ bool WebServer::start(int port)
             continue;
         }
 
-        cout << "Новое соединение принято!" << endl;
-        handleClient(client_socket); // Обрабатываем клиента
+        lock_guard<mutex> lock(log_mutex);
+        cout << "new connection - client: " << client_socket << endl;
+
+        client_threads.emplace_back([this, client_socket]() {
+            this->handleClient(client_socket);
+        });
+        
     }
 
     close(server_fd);

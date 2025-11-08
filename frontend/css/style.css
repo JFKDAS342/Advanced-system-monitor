@@ -1,0 +1,35 @@
+/* Убираем отступы у body и делаем черный фон */
+body {
+    margin: 0;
+    padding: 0;
+    background: #000000;
+    overflow: hidden; /* Убираем прокрутку */
+}
+
+/* Настраиваем canvas на весь экран */
+#snowCanvas {
+    display: block; /* Убираем лишние отступы */
+    width: 100vw;   /* 100% ширины окна */
+    height: 100vh;  /* 100% высоты окна */
+}
+
+.highPanel{
+    border: #000000;
+    background-color: #00000000;
+    width: 100vw;
+    height: 10vh;
+}
+
+.menuBut{
+    color:#ffffff;
+    background-color: #0a0909b5;
+    padding: 10px, 20px;
+    width: 3.5vw;
+    height: 4.0vh;
+    border-radius: 5px;
+    outline: none;
+	cursor: pointer;
+	transition: 0.3s;
+	caret-color: transparent;
+
+}

@@ -6,6 +6,7 @@
 #include <thread>
 #include <stdlib.h>
 #include <ctime>
+#include <unistd.h>
 using namespace std;
 WebServer *g_server = nullptr;
 
@@ -17,18 +18,12 @@ void signalHandler(int signal)
     }
 }
 
-    WebServer server;
-
 int main()
 {
     cout << unitbuf;
-    time_t now = time(0);
-    for (char c : "Loading.."){
-        cout << c << flush;
-        this_thread::sleep_for(chrono::milliseconds(90));
-    }
-    cout << "Сервер запустился!\n" << "time" << now << endl;
+    chdir("/home/ilya/Advanced-system-monitor/backend");
 
+    cout << "server work" << endl;
     WebServer server;
     g_server = &server;
     // настройка обработчиков сигнал

@@ -1,46 +1,34 @@
 # Компилятор и флаги
 CXX = g++
-CXXFLAGS = -std=c++11 -Iinclude -Wall -Wextra -pedantic
-LDFLAGS = 
-
-# Директории и файлы
-SRCDIR = src
-INCDIR = include
-SOURCES = $(wildcard $(SRCDIR)/*.cpp)
+CXXFLAGS = -std=c++17 -Iinclude -Wall -Wextra -pedantic
+SOURCES = src/FileLogger.cpp src/JSONSerializer.cpp src/main.cpp src/MetricsCollector.cpp src/WebServer.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 TARGET = server
 
-# Основная цель
-$(TARGET): $(OBJECTS)
-	@echo "🔨 Линковка исполняемого файла..."
-	$(CXX) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
-	@echo "✅ Сервер собран: $(TARGET)"
-
-# Правило для компиляции .cpp файлов
-$(SRCDIR)/%.o: $(SRCDIR)/%.cpp
-	@echo "📦 Компиляция $<..."
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Основные цели
 all: $(TARGET)
 
-clean:
-	@echo "🧹 Очистка проекта..."
-	rm -f $(OBJECTS) $(TARGET) server.log
-	@echo "✅ Проект очищен"
+$(TARGET): $(OBJECTS)
+	$(CXX) $(OBJECTS) -o $(TARGET)
+
+src/FileLogger.o: src/FileLogger.cpp include/FileLogger.h
+	$(CXX) $(CXXFLAGS) -c src/FileLogger.cpp -o src/FileLogger.o
+
+src/JSONSerializer.o: src/JSONSerializer.cpp include/JSONSerializer.h
+	$(CXX) $(CXXFLAGS) -c src/JSONSerializer.cpp -o src/JSONSerializer.o
+
+src/main.o: src/main.cpp include/WebServer.h include/MetricsCollector.h
+	$(CXX) $(CXXFLAGS) -c src/main.cpp -o src/main.o
+
+src/MetricsCollector.o: src/MetricsCollector.cpp include/MetricsCollector.h include/SystemMetrics.h
+	$(CXX) $(CXXFLAGS) -c src/MetricsCollector.cpp -o src/MetricsCollector.o
+
+src/WebServer.o: src/WebServer.cpp include/WebServer.h include/MetricsCollector.h
+	$(CXX) $(CXXFLAGS) -c src/WebServer.cpp -o src/WebServer.o
 
 run: $(TARGET)
-	@echo "🚀 Запуск сервера..."
 	./$(TARGET)
 
-debug: CXXFLAGS += -g -DDEBUG
-debug: $(TARGET)
+clean:
+	rm -f $(OBJECTS) $(TARGET)
 
-# Зависимости для объектных файлов
-$(SRCDIR)/main.o: $(INCDIR)/WebServer.h
-$(SRCDIR)/WebServer.o: $(INCDIR)/WebServer.h $(INCDIR)/MetricsCollector.h
-$(SRCDIR)/MetricsCollector.o: $(INCDIR)/MetricsCollector.h $(INCDIR)/JSONSerializer.h
-$(SRCDIR)/JSONSerializer.o: $(INCDIR)/JSONSerializer.h
-$(SRCDIR)/FileLogger.o: $(INCDIR)/FileLogger.h
-
-.PHONY: all clean run debug info help
+.PHONY: all clean run
