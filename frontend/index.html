@@ -7,10 +7,56 @@
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <div class="highPanel" id="highPanel">
-        <button class="menuBut" type="menuBut">Меню</button>
+    <div class="name">
+        <h1>Advanced system monitor</h1>
+    </div>
+    <div class="menu-container">
+        <nav>
+            <div class="menu-left">
+            <ul>
+                <il><a class="metrics" href="/">Metrics</a></il>
+                <il><a class="speedtest" href="/">Speedtest</a></il>
+                <il><a class="about" href="/">О нас</a></il>
+                <il><a class="help" href="/"> Помощь</a></il>
+            </ul>
+            </div>
+            <div class="menu-righte">
+                <il><a class="signIn" href="/">Регистрация/Вход</a></il>
+            </div>
+        </nav>
+    </div>
+    <div class="metrics-container" id="metrics-container">
+        <div class="button_Metrics-Conteiner">
+            <button class="showMetrics" id="showMetrics" onclick="location.href='URL'">Показать</button>
+        </div>
+        <div class="cpu_usage" id="cpu-usage">
+            <h3>Cpu usage: </h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="cpu-progress">
+                        <span class="percentage" id="cpu-percentage">0%</span>
+                    </div>
+                </div>
+        </div>
+        <div class="memory_usage" id="memory-usage">
+            <h3>Mem. usage: </h3>
+            <div class="progress-container">
+                <div class="progress-bar" id="memory-progress">
+                    <span class="percentage" id="memory-percentage">0%</span>
+                </div>
+            </div>
+        </div>
+        <div class="disk_usage" id="disk-usage">
+            <h3>Disk usage: </h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="disk-progress">
+                        <span class="percentage" id="disk-percentage">0%</span>
+                    </div>
+                </div>
+        </div>
+        <div id="status">Loading...</div>
     </div>
     <canvas id="snowCanvas"></canvas>
+    <script src="/static/js/app.js"></script>
     <script src="/static/js/snow.js"></script>
 </body>
 </html>

@@ -1,35 +1,170 @@
-/* Убираем отступы у body и делаем черный фон */
 body {
     margin: 0;
     padding: 0;
     background: #000000;
-    overflow: hidden; /* Убираем прокрутку */
+    overflow: hidden;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
 }
 
 /* Настраиваем canvas на весь экран */
 #snowCanvas {
-    display: block; /* Убираем лишние отступы */
-    width: 100vw;   /* 100% ширины окна */
-    height: 100vh;  /* 100% высоты окна */
-}
-
-.highPanel{
-    border: #000000;
-    background-color: #00000000;
+    display: block;
     width: 100vw;
-    height: 10vh;
+    height: 100vh;
+}
+.name{
+    position: fixed;
+    width: 100%;
+    font-size: 120%;
+    margin-top: -1%;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+.name h1{
+    text-shadow: #ffffff;
+    color: #ffffff;
+    animation-name: color-change;
+    animation-duration: 4s;
+    animation-iteration-count: infinite;
 }
 
-.menuBut{
-    color:#ffffff;
-    background-color: #0a0909b5;
-    padding: 10px, 20px;
-    width: 3.5vw;
-    height: 4.0vh;
-    border-radius: 5px;
-    outline: none;
-	cursor: pointer;
-	transition: 0.3s;
-	caret-color: transparent;
+@keyframes color-change{
+    0% { color: rgba(111, 26, 119, 0.766); }
+    50% {color: rgb(98, 46, 146);}
+    100% { color: rgb(110, 73, 143); }
 
+}
+
+
+/* Основной контейнер меню */
+.menu-container {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: rgba(69, 69, 69, 0.192);
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+
+
+/* Контейнер навигации с flexbox */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Левая часть меню */
+.menu-left {
+    display: flex;
+    gap: 15px;
+}
+
+/* Правая часть меню */
+.menu-right {
+    display: flex;
+}
+
+/* Общие стили для ссылок */
+.menu-container a {
+    padding: 10px 15px;
+    font: 15px Arial;
+    text-decoration: none;
+    color: #878787;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+/* Эффекты при наведении */
+.menu-container a:hover,
+.menu-container a.active {
+    background-color: rgba(69, 69, 69, 0.5);
+}
+
+/* Убираем маркеры списка */
+ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    gap: 15px;
+}
+.metrics-container{
+    background: rgba(69, 69, 69, 0.192);
+    position: fixed;
+    text-align: left;
+    top: 70px;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    margin: 0 auto;
+    width: 50%;
+    height: 25%;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border: 1px solid rgb(255, 255, 255);
+}
+
+.progress-container {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.progress-bar {
+    height: 20px;
+    border-radius: 10px;
+    width: 0%; /* Начальная ширина */
+    transition: width 0.5s ease, background-color 0.5s ease;
+    position: relative;
+}
+
+.percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: bold;
+    font-size: 15px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+.cpu_usage h3, .memory_usage h3, .disk_usage h3 {
+    color: #878787;
+    margin: 0 0 5px 0;
+}
+
+.button_Metrics-Conteiner{
+    position: absolute;
+    display: flex;
+    top: 10px;
+    right: 10px;
+    margin: 0;
+}
+
+.showMetrics{
+    background-color: #ffffff00;
+    color: #878787;
+    width: 150px;
+    height: 25px;
+    border: 1px solid #878787;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.showMetrics:hover{
+    background-color: rgba(135, 135, 135, 0.1);
+    color: #ffffff;
+}
+
+.status {
+    color: #888888;
 }

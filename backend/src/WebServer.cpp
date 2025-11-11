@@ -21,14 +21,14 @@ WebServer::WebServer() : server_port(0), server_fd(-1), is_running(false) {}
 // ДЕСТРУКТОР - автоматически вызывается при удалении объекта
 WebServer::~WebServer()
 {
-    stop();
+    
     //цикл для проверки завершения всех потоков
     for (auto& thread : client_threads){
         if (thread.joinable()){
             thread.join();
         }
     }
-
+    stop();
     cout << "Все потоки завершины!" << endl;
     
 }
@@ -88,7 +88,7 @@ bool WebServer::serveStaticFile(int client_socket, const string &filepath)
                          "Content-Length: 0\r\n"
                          "\r\n";
         send(client_socket,response.c_str(),response.length(), 0);
-        cout << "кто то хочет выебать наш засекреченный путь!" << filepath << endl;
+        cout << "Атака!" << filepath << endl;
         return false;
     }
 
@@ -201,8 +201,7 @@ void WebServer::handleClient(int client_socket)
         return;
     }
     else if (request.find("GET /") != string::npos ||
-        request.find("GET /index.html") != string::npos ||
-        request.find("GET /") != string::npos) {
+        request.find("GET /index.html") != string::npos) {
                     if (serveStaticFile(client_socket, "../frontend/index.html")) {
             close(client_socket);
             return;
